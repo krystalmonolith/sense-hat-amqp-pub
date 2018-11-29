@@ -1,0 +1,11 @@
+{
+  "name": "sense-hat-state-vector-pub",
+  "version": "1.0.0",
+  "description": "Raspberry Pi SenseHAT State Vector Transmitter",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}
