@@ -81,5 +81,4 @@ function main() {
   });
 }
 
-console.log(JSON.stringify(process.env,null,2));
 main();
