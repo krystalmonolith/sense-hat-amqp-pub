@@ -77,3 +77,7 @@ typings/
 
 #DynamoDB Local files 
 .dynamodb/ 
+
+# TLS Client Cert/Key + CA
+tls/*.pem
+tls/userpass
