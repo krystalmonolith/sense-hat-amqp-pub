@@ -2,6 +2,9 @@ const rabbitmq_host = 'ap1000';
 
 const amqp = require('amqplib');
 const fs = require('fs');
+const uuidv4 = require('uuid/v4');
+
+const { Observable, timer } = require('rxjs');
 
 fs.readFile('tls/userpass', 'utf8', function(err, contents) {
     if (err) {
@@ -9,11 +12,12 @@ fs.readFile('tls/userpass', 'utf8', function(err, contents) {
       process.exit();
     }
     var userpass = contents.replace(/^\s+|\s+$/g, '');
-    send(rabbitmq_host, userpass);
+    const sessionId = uuidv4();
+    send(rabbitmq_host, userpass, sessionId);
 });
 
 
-function send(host,userpass) {
+function send(host,userpass, sessionId) {
   const auth = encodeURIComponent(userpass);
   const url = 'amqps://' + auth + '@' + host;
   var opts = {
@@ -24,20 +28,26 @@ function send(host,userpass) {
   amqp.connect(url, opts).then(function(conn) {
     return conn.createChannel().then(function(ch) {
       var q = 'hello';
-      var msg = 'Hello World!';
-   
-      var ok = ch.assertQueue(q, {durable: false});
-   
-      return ok.then(function(_qok) {
-        // NB: `sentToQueue` and `publish` both return a boolean
-        // indicating whether it's OK to send again straight away, or
-        // (when `false`) that you should wait for the event `'drain'`
-        // to fire before writing again. We're just doing the one write,
-        // so we'll ignore it.
-        ch.sendToQueue(q, Buffer.from(msg));
-        console.log(" [x] Sent '%s'", msg);
-        return ch.close();
-      });
-    }).finally(function() { conn.close(); });
+      var qp = ch.assertQueue(q, {durable: false});
+      return qp.then(function(qstate) {
+        console.log(qstate);
+        const subscription = timer(0,1000).subscribe((msgnum) => {
+          const msg = {
+             'id': sessionId,
+             'mn': msgnum,
+             'ts': Date.now() / 1000
+          };
+          const msgJson = JSON.stringify(msg);
+          ch.sendToQueue(q, Buffer.from(msgJson));
+          console.log(msgJson);
+        });
+        process.on('SIGINT', () => {
+          console.log('\nSIGINT!');
+          subscription.unsubscribe();
+          ch.close();
+          conn.close();
+        });
+      }); // qp.then
+    });
   }).catch(console.warn);
 }

@@ -3,13 +3,14 @@
   "version": "1.0.0",
   "description": "Raspberry Pi SenseHAT State Vector Transmitter",
   "main": "index.js",
-  "scripts": {
-  },
+  "scripts": {},
   "author": "",
   "license": "ISC",
   "dependencies": {
     "amqplib": "^0.5.2",
     "minimatch": "^3.0.4",
-    "node-sense-hat": "0.0.2"
+    "node-sense-hat": "0.0.2",
+    "rxjs": "^6.3.3",
+    "uuid": "^3.3.2"
   }
 }
