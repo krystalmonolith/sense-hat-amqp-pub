@@ -1,8 +1,13 @@
-const queueName = 'hello';
-const rabbitmq_host = 'ap1000';
-const UPDATE_RATE_MSEC = process.argv[2] || 100;
+const DEF_HOST   = 'localhost:15672';
+const DEF_PERIOD = 100;
+const DEF_QUEUE  = 'sensehat/1/0/0';
 
-const PROGRAM_NAME = process.argv[1].replace(/^\/.*\//,'');
+const DEF_USERPASS        = 'tls/userpass';
+const DEF_TLS_CLIENT_CERT = 'tls/client_certificate.pem';
+const DEF_TLS_CLIENT_KEY  = 'tls/client_key.pem';
+const DEF_TLS_CA_CERTS    = 'tls/ca_certificate.pem';
+
+require('dotenv').config()
 
 const fs = require('fs');
 const os = require('os');
@@ -12,9 +17,17 @@ const uuidv4 = require('uuid/v4');
 const { Observable, timer } = require('rxjs');
 const imu = require("node-sense-hat").Imu;
 
-const IMU = new imu.IMU();
+function getFile(f, errmsg) {
+  try {
+    return fs.readFileSync(f).toString();
+  } catch (e) {
+    console.error(errmsg, e);
+    process.exit();
+  }
+}
 
-function imuMessageService(sessionId, period, subCallback) {
+function imuMessageService(sessionid, period, subCallback) {
+  const IMU = new imu.IMU();
   return Observable.create((observer) => {
     console.log("TIMER PERIOD: %d msec", period);
     const timerSubscription = timer(0,period).subscribe((msgnum) => {
@@ -24,11 +37,8 @@ function imuMessageService(sessionId, period, subCallback) {
           return;
         }
         data.mn = msgnum;
-        data.id = sessionId;
+        data.id = sessionid;
         data.host = os.hostname();
-
-        delete data.humidity;
-        delete data.temperature;
         observer.next(data);
       }); 
     });
@@ -36,28 +46,23 @@ function imuMessageService(sessionId, period, subCallback) {
   });
 }
 
-function send(host,userpass, sessionId) {
+function send(host, period, queue, sessionid, hostname, userpass, tlsopts) {
   const auth = encodeURIComponent(userpass);
   const url = 'amqps://' + auth + '@' + host;
-  const opts = {
-    cert: fs.readFileSync('tls/client_certificate.pem'),
-    key: fs.readFileSync('tls/client_key.pem'),
-    ca: [fs.readFileSync('tls/ca_certificate.pem')]
-  };
-  amqp.connect(url, opts).then((conn) => {
+  amqp.connect(url, tlsopts).then((conn) => {
     return conn.createChannel().then((ch) => {
-      const qp = ch.assertQueue(queueName, {durable: false});
+      const qp = ch.assertQueue(queue, {durable: false});
       return qp.then((qstate) => {
         console.log(qstate);
         var timerSubscription;
-        imuMessageService(sessionId, UPDATE_RATE_MSEC, (ts) => { timerSubscription = ts; })
+        imuMessageService(sessionid, period, (ts) => { timerSubscription = ts; })
         .subscribe(data => {
           const msgJson = JSON.stringify(data);
-          ch.sendToQueue(queueName, Buffer.from(msgJson));
+          ch.sendToQueue(queue, Buffer.from(msgJson));
           console.log(msgJson);
         });
         process.on('SIGINT', () => {
-          console.log('\n' + PROGRAM_NAME + ' Exiting!');
+          console.log('\nExiting!');
           if (timerSubscription) { 
             timerSubscription.unsubscribe();
           }
@@ -70,15 +75,33 @@ function send(host,userpass, sessionId) {
 }
 
 function main() {
-  fs.readFile('tls/userpass', 'utf8', (err, contents) => {
-    if (err) {
-      console.error("Unable to read \'tls/userpass\' file! ... " + err);
-      process.exit();
-    }
-    const userpass = contents.replace(/^\s+|\s+$/g, '');
-    const sessionId = uuidv4();
-    send(rabbitmq_host, userpass, sessionId);
-  });
+  const host    = process.argv[2] || process.env.HOST   || DEF_HOST;
+  const period  = process.argv[3] || process.env.PERIOD || DEF_PERIOD;
+  const queue   = process.argv[4] || process.env.QUEUE  || DEF_QUEUE;
+
+  const hostname     = os.hostname();
+
+  const userpass_file   = process.env.USERPASS        || DEF_USERPASS;
+  const tls_client_cert = process.env.TLS_CLIENT_CERT || DEF_TLS_CLIENT_CERT;
+  const tls_client_key  = process.env.TLS_CLIENT_KEY  || DEF_TLS_CLIENT_KEY;
+  const tls_ca_certs    = process.env.TLS_CA_CERTS    || DEF_TLS_CA_CERTS;
+
+  const sessionid = uuidv4();
+
+  const userpass = getFile(userpass_file, 'Unable to read username:password from file \'' + userpass_file + '\': %s')
+                   .replace(/^\s+|\s+$/g, '');
+
+  const tlsopts = {
+    cert: getFile(tls_client_cert, 'Unable to read TLS_CLIENT_CERT: %s'),
+    key: getFile(tls_client_key, 'Unable to read TLS_CLIENT_KEY: %s'),
+    ca: [getFile(tls_ca_certs, 'Unable to read TLS_CA_CERTS: %s')]
+  };
+
+  try {
+    send(host, period, queue, sessionid, hostname, userpass, tlsopts);
+  } catch (serr) {
+    console.error('SEND ERROR: %s', serr);
+  }
 }
 
 main();
