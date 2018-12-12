@@ -1,3 +1,6 @@
+const VERSION      = '1.0.0';
+const PROGRAM_NAME = 'sense-hat-amqp-pub';
+
 const DEF_HOST   = 'localhost:15672';
 const DEF_PERIOD = 100;
 const DEF_QUEUE  = 'sensehat/1/0/0';
@@ -6,6 +9,7 @@ const DEF_USERPASS        = 'tls/userpass';
 const DEF_TLS_CLIENT_CERT = 'tls/client_certificate.pem';
 const DEF_TLS_CLIENT_KEY  = 'tls/client_key.pem';
 const DEF_TLS_CA_CERTS    = 'tls/ca_certificate.pem';
+
 
 require('dotenv').config()
 
@@ -59,10 +63,10 @@ function send(host, period, queue, sessionid, hostname, userpass, tlsopts) {
         .subscribe(data => {
           const msgJson = JSON.stringify(data);
           ch.sendToQueue(queue, Buffer.from(msgJson));
-          console.log(msgJson);
+          console.debug(msgJson);
         });
         process.on('SIGINT', () => {
-          console.log('\nExiting!');
+          console.info("\n%s v%s: Exiting at %s", PROGRAM_NAME, VERSION, new Date().toISOString());
           if (timerSubscription) { 
             timerSubscription.unsubscribe();
           }
@@ -98,6 +102,8 @@ function main() {
   };
 
   try {
+    console.info("%s v%s: Started at %s (Node.js %s) [%d]", PROGRAM_NAME, VERSION, new Date().toISOString(), process.version, process.pid);
+    console.info("%s %s %s %s", os.hostname(), os.type(), os.arch(), os.release());
     send(host, period, queue, sessionid, hostname, userpass, tlsopts);
   } catch (serr) {
     console.error('SEND ERROR: %s', serr);
