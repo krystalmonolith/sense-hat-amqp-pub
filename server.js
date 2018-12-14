@@ -1,4 +1,4 @@
-const VERSION      = '1.1.0';
+const VERSION      = '1.1.1';
 const PROGRAM_NAME = 'sense-hat-amqp-pub';
 
 //-----------------------------------------------------------------------------
@@ -120,10 +120,10 @@ function send(host, period, queue, sessionid, hostname, userpass, tlsopts) {
 
 function main() {
   const host      = process.argv[2] || process.env.HOST      || DEF_HOST;
-  const period    = process.argv[4] || process.env.PERIOD    || DEF_PERIOD;
-  const queue     = process.argv[5] || process.env.QUEUE     || DEF_QUEUE;
-  const sessionid = process.argv[6] || process.env.SESSIONID || uuidv4();
-  const hostname  = process.argv[7] || process.env.HOSTNAME  || os.hostname();
+  const period    = process.argv[3] || process.env.PERIOD    || DEF_PERIOD;
+  const queue     = process.argv[4] || process.env.QUEUE     || DEF_QUEUE;
+  const sessionid = process.argv[5] || process.env.SESSIONID || uuidv4();
+  const hostname  = process.argv[6] || process.env.HOSTNAME  || os.hostname();
 
   const userpass_file   = process.env.USERPASS        || DEF_USERPASS;
   const tls_client_cert = process.env.TLS_CLIENT_CERT || DEF_TLS_CLIENT_CERT;
