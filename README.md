@@ -77,9 +77,10 @@ Follow the [RabbitMQ TLS Support](https://www.rabbitmq.com/ssl.html) page settin
 
 _Using .pem formatted files recommended!_
 
-* For testing follow the above page's advice to use [tls-gen](https://github.com/michaelklishin/tls-gen) to create test certificates
+* See [tls-gen](https://github.com/michaelklishin/tls-gen) to create test certificates
 
 ## Links:
 * [node-sense-hat](https://github.com/balena-io-playground/node-sense-hat): Node.js Sense Hat Package
 * [RTIMULib2](https://github.com/richardstechnotes/RTIMULib2): IMU Library
+* [LSM9DS1 Inertal Module Datasheet](https://www.st.com/content/ccc/resource/technical/document/datasheet/1e/3f/2a/d6/25/eb/48/46/DM00103319.pdf/files/DM00103319.pdf/jcr:content/translations/en.DM00103319.pdf)
 * [Sense Hat Docs](https://www.raspberrypi.org/documentation/hardware/sense-hat/): Basic Sense Hat Docs
