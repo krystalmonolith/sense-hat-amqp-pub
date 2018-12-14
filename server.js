@@ -92,7 +92,7 @@ function send(host, period, queue, sessionid, hostname, userpass, tlsopts) {
       return qp.then((qstate) => {
         console.log(qstate);
         var timerSubscription;
-        var exponent = 0;
+        var exponent = 10;
         imuMessageService(sessionid, hostname, period, (ts) => { timerSubscription = ts; })
         .subscribe(data => {
           const msgJson = JSON.stringify(data);
@@ -138,7 +138,6 @@ function main() {
     key: getFile(tls_client_key, util.format('Unable to read TLS_CLIENT_KEY[%s]: %%s', tls_client_key)),
     ca: [getFile(tls_ca_certs, util.format('Unable to read TLS_CA_CERTS[%s]: %%s', tls_ca_certs))]
   };
-
 
   try {
     console.info("%s v%s: Started at %s (Node.js %s) [%d]", PROGRAM_NAME, VERSION, new Date().toISOString(), process.version, process.pid);
