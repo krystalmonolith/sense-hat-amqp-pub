@@ -1,4 +1,4 @@
-const VERSION      = '1.2.0';
+const VERSION      = '1.2.1';
 const PROGRAM_NAME = 'sense-hat-amqp-pub';
 
 //-----------------------------------------------------------------------------
@@ -44,6 +44,12 @@ function getFile(f, errmsg) {
   try {
     return fs.readFileSync(f).toString();
   } catch (e) {
+    if (!errmsg || errmsg === null) {
+        errmsg = "Fatal Error: %s";
+    }
+    if (errmsg instanceof Function) {
+        errmsg = errmsg(e);
+    }
     console.error(errmsg, e);
     process.exit();
   }
@@ -138,12 +144,12 @@ function main() {
                    .replace(/^\s+|\s+$/g, ''); // Read and remove line ending characters.
 
   const ca_certs = tls_ca_certs.split(',').map((f) => { 
-    return getFile(f, util.format('Unable to read TLS_CA_CERTS[%s]: %%s', f));
+    return getFile(f, (e) => { return util.format('Unable to read TLS_CA_CERTS[%s]: %s', f, e); });
   }).join('\n');
 
   const tlsopts = {
-    cert: getFile(tls_client_cert, util.format('Unable to read TLS_CLIENT_CERT[%s]: %%s', tls_client_cert)),
-    key: getFile(tls_client_key, util.format('Unable to read TLS_CLIENT_KEY[%s]: %%s', tls_client_key)),
+    cert: getFile(tls_client_cert, (e) => { return util.format('Unable to read TLS_CLIENT_CERT[%s]: %s', tls_client_cert, e); }),
+    key:  getFile(tls_client_key,  (e) => { return util.format('Unable to read TLS_CLIENT_KEY[%s]: %s', tls_client_key,  e); }),
     ca: ca_certs
   };
 
