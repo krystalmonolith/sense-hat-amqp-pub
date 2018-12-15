@@ -1,4 +1,4 @@
-const VERSION      = '1.1.1';
+const VERSION      = '1.2.0';
 const PROGRAM_NAME = 'sense-hat-amqp-pub';
 
 //-----------------------------------------------------------------------------
@@ -16,6 +16,10 @@ const DEF_PERIOD     = 100; // Update Period in Milliseconds
 //-----------------------------------------------------------------------------
 // Load .env File
 require('dotenv').config();
+
+//-----------------------------------------------------------------------------
+// Load command line parameters.
+const args = require('yargs').argv;
 
 //-----------------------------------------------------------------------------
 // Initialize debug boolean that controls logging of JSON published to RabbitMQ. 
@@ -92,7 +96,7 @@ function send(host, period, queue, sessionid, hostname, userpass, tlsopts) {
       return qp.then((qstate) => {
         console.log(qstate);
         var timerSubscription;
-        var exponent = 10;
+        var exponent = 0;
         imuMessageService(sessionid, hostname, period, (ts) => { timerSubscription = ts; })
         .subscribe(data => {
           const msgJson = JSON.stringify(data);
@@ -100,9 +104,9 @@ function send(host, period, queue, sessionid, hostname, userpass, tlsopts) {
           if (DEBUG_AMQP_JSON) {
             console.log(msgJson);
           }
-          if ((2 << exponent) <= data.mn) {
+          if ((1 << exponent) == data.mn) {
             exponent++;
-            console.log('%s: %d messages published to %s.', new Date().toISOString(), data.mn, queue);
+            console.log('%s: %d messages published to queue %s.', new Date().toISOString(), data.mn, queue);
           }
         });
         process.on('SIGINT', () => {
@@ -119,24 +123,28 @@ function send(host, period, queue, sessionid, hostname, userpass, tlsopts) {
 }
 
 function main() {
-  const host      = process.argv[2] || process.env.HOST      || DEF_HOST;
-  const period    = process.argv[3] || process.env.PERIOD    || DEF_PERIOD;
-  const queue     = process.argv[4] || process.env.QUEUE     || DEF_QUEUE;
-  const sessionid = process.argv[5] || process.env.SESSIONID || uuidv4();
-  const hostname  = process.argv[6] || process.env.HOSTNAME  || os.hostname();
+  const host      = args.host      || process.env.HOST      || DEF_HOST;
+  const period    = args.period    || process.env.PERIOD    || DEF_PERIOD;
+  const queue     = args.queue     || process.env.QUEUE     || DEF_QUEUE;
+  const sessionid = args.sessionid || process.env.SESSIONID || uuidv4();
+  const hostname  = args.hostname  || process.env.HOSTNAME  || os.hostname();
 
-  const userpass_file   = process.env.USERPASS        || DEF_USERPASS;
-  const tls_client_cert = process.env.TLS_CLIENT_CERT || DEF_TLS_CLIENT_CERT;
-  const tls_client_key  = process.env.TLS_CLIENT_KEY  || DEF_TLS_CLIENT_KEY;
-  const tls_ca_certs    = process.env.TLS_CA_CERTS    || DEF_TLS_CA_CERTS;
+  const userpass_file   = args.userpass        || process.env.USERPASS        || DEF_USERPASS;
+  const tls_client_cert = args.tls_client_cert || process.env.TLS_CLIENT_CERT || DEF_TLS_CLIENT_CERT;
+  const tls_client_key  = args.tls_client_key  || process.env.TLS_CLIENT_KEY  || DEF_TLS_CLIENT_KEY;
+  const tls_ca_certs    = args.tls_ca_certs    || process.env.TLS_CA_CERTS    || DEF_TLS_CA_CERTS;
 
   const userpass = getFile(userpass_file, 'Unable to read username:password from file \'' + userpass_file + '\': %s')
                    .replace(/^\s+|\s+$/g, ''); // Read and remove line ending characters.
 
+  const ca_certs = tls_ca_certs.split(',').map((f) => { 
+    return getFile(f, util.format('Unable to read TLS_CA_CERTS[%s]: %%s', f));
+  }).join('\n');
+
   const tlsopts = {
     cert: getFile(tls_client_cert, util.format('Unable to read TLS_CLIENT_CERT[%s]: %%s', tls_client_cert)),
     key: getFile(tls_client_key, util.format('Unable to read TLS_CLIENT_KEY[%s]: %%s', tls_client_key)),
-    ca: [getFile(tls_ca_certs, util.format('Unable to read TLS_CA_CERTS[%s]: %%s', tls_ca_certs))]
+    ca: ca_certs
   };
 
   try {
