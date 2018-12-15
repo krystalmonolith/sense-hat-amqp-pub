@@ -70,13 +70,7 @@ function imuMessageService(sessionid, hostname, period, subCallback) {
         data.mn = msgnum;
         data.id = sessionid;
         data.host = hostname;
-        try {
-          observer.next(data);
-        } catch (e) {
-          if (!(e instanceof IllegalOperationError)) {
-            throw e;
-          }
-        }
+        observer.next(data);
       }); 
     });
     subCallback(timerSubscription);
@@ -140,14 +134,17 @@ function main() {
   const tls_client_key  = args.tls_client_key  || process.env.TLS_CLIENT_KEY  || DEF_TLS_CLIENT_KEY;
   const tls_ca_certs    = args.tls_ca_certs    || process.env.TLS_CA_CERTS    || DEF_TLS_CA_CERTS;
 
-
   const userpass = getFile(userpass_file, 'Unable to read username:password from file \'' + userpass_file + '\': %s')
                    .replace(/^\s+|\s+$/g, ''); // Read and remove line ending characters.
+
+  const ca_certs = tls_ca_certs.split(',').map((f) => { 
+    return getFile(f, util.format('Unable to read TLS_CA_CERTS[%s]: %%s', f));
+  }).join('\n');
 
   const tlsopts = {
     cert: getFile(tls_client_cert, util.format('Unable to read TLS_CLIENT_CERT[%s]: %%s', tls_client_cert)),
     key: getFile(tls_client_key, util.format('Unable to read TLS_CLIENT_KEY[%s]: %%s', tls_client_key)),
-    ca: [getFile(tls_ca_certs, util.format('Unable to read TLS_CA_CERTS[%s]: %%s', tls_ca_certs))]
+    ca: ca_certs
   };
 
   try {
