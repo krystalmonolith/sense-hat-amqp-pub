@@ -19,7 +19,32 @@ require('dotenv').config();
 
 //-----------------------------------------------------------------------------
 // Load command line parameters.
-const args = require('yargs').argv;
+// Do not use yargs .default(key,value[,desc]) as it renders the .env file non-functional.
+const args = require('yargs')
+  .version(VERSION)
+  .scriptName(PROGRAM_NAME)
+  .help(true)
+  .usage('npm start -- [--help] [--version] [--host=<host>] [--period=<period>] [--queue=<queue>] [--sessionid=<sessionid>] [--hostame=<hostname>] [--userpass=<userpass-file>] [--tls_client_cert=<client-cert-file>] [--tls_client_key=<client-key-file>] [--tls_ca_certs=<ca_cert_file>[,<ca_cert_file>[...]]]')
+  .describe('host', 'RabbitMQ Server hostname | IP Address.')
+  .alias('host','h')
+  .describe('period', 'Update Period/Delay in milliseconds.')
+  .alias('period','p')
+  .describe('queue', 'Destination RabbitMQ Queue Name.')
+  .alias('queue','q')
+  .describe('sessionid', '\'id\' field in published JSON.')
+  .alias('sessionid','s')
+  .describe('hostname', '\'host\' field in published JSON.')
+  .alias('hostname','n')
+  .describe('userpass', 'Path to file containing RabbitMQ URI \'username:password\` string.')
+  .alias('userpass','u')
+  .describe('tls_client_cert', 'Path to SSL/TLS Client Certificate file.')
+  .alias('tls_client_cert','c')
+  .describe('tls_client_key', 'Path to SSL/TLS Client Key file.')
+  .alias('tls_client_key','k')
+  .describe('tls_ca_certs', 'Path(s) to SSL/TLS CA Certificate file(s), separated by commas.')
+  .alias('tls_ca_certs','a')
+  .string(['host', 'queue', 'sessionid', 'hostname', 'userpass', 'tls_client_cert', 'tls_client_key', 'tls_ca_certs'])
+  .argv;
 
 //-----------------------------------------------------------------------------
 // Initialize debug boolean that controls logging of JSON published to RabbitMQ. 
