@@ -44,7 +44,7 @@ to a [RabbitMQ](https://www.rabbitmq.com/)
 
 ## Command Line Execution:
 ```aidl
-$ npm start [<host> [<period> [<queue> [<sessionid> [<hostname>]]]]]
+$ npm start -- [--host=<host>] [--period=<period>] [--queue=<queue>] [--sessionid=<sessionid>] [--hostame=<hostname>] [--userpass=<userpass-file>] [--tls_client_cert=<client-cert-file>] [--tls_client_key=<client-key-file>] [--tls_ca_certs=<ca_cert_file>[,<ca_cert_file>[...]]]
 ```
 
 ## .env Configuration File
