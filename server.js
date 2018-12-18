@@ -14,17 +14,13 @@ const DEF_TLS_CA_CERTS    = 'tls/ca_certificate.pem';     // CA Certificate(s)
 const DEF_PERIOD     = 100; // Update Period in Milliseconds
 
 //-----------------------------------------------------------------------------
-// Load .env File
-require('dotenv').config();
-
-//-----------------------------------------------------------------------------
 // Load command line parameters.
 // Do not use yargs .default(key,value[,desc]) as it renders the .env file non-functional.
 const args = require('yargs')
   .version(VERSION)
   .scriptName(PROGRAM_NAME)
   .help(true)
-  .usage('npm start -- [--help] [--version] [--host=<host>] [--period=<period>] [--queue=<queue>] [--sessionid=<sessionid>] [--hostame=<hostname>] [--userpass=<userpass-file>] [--tls_client_cert=<client-cert-file>] [--tls_client_key=<client-key-file>] [--tls_ca_certs=<ca_cert_file>[,<ca_cert_file>[...]]]')
+  .usage('npm start -- [--help] [--version] [--host=<host>] [--period=<period>] [--queue=<queue>] [--sessionid=<sessionid>] [--hostame=<hostname>] [--userpass=<userpass-file>] [--tls_client_cert=<client-cert-file>] [--tls_client_key=<client-key-file>] [--tls_ca_certs=<ca_cert_file>[,<ca_cert_file>[...]]] [--env=<path_to_env_file>]')
   .describe('host', 'RabbitMQ Server hostname | IP Address.')
   .alias('host','h')
   .describe('period', 'Update Period/Delay in milliseconds.')
@@ -43,8 +39,18 @@ const args = require('yargs')
   .alias('tls_client_key','k')
   .describe('tls_ca_certs', 'Path(s) to SSL/TLS CA Certificate file(s), separated by commas.')
   .alias('tls_ca_certs','a')
-  .string(['host', 'queue', 'sessionid', 'hostname', 'userpass', 'tls_client_cert', 'tls_client_key', 'tls_ca_certs'])
+  .describe('env', 'Path to key=value environment file.')
+  .alias('env','e')
+  .string(['host', 'queue', 'sessionid', 'hostname', 'userpass', 'tls_client_cert', 'tls_client_key', 'tls_ca_certs', 'env'])
   .argv;
+
+//-----------------------------------------------------------------------------
+// Load .env File
+if (args.env) {
+  require('dotenv').config({ path: args.env });
+} else {
+  require('dotenv').config();
+}
 
 //-----------------------------------------------------------------------------
 // Initialize debug boolean that controls logging of JSON published to RabbitMQ. 
