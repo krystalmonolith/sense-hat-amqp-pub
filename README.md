@@ -84,3 +84,4 @@ _Using .pem formatted files recommended!_
 * [RTIMULib2](https://github.com/richardstechnotes/RTIMULib2): IMU Library
 * [LSM9DS1 Inertal Module Datasheet](https://www.st.com/content/ccc/resource/technical/document/datasheet/1e/3f/2a/d6/25/eb/48/46/DM00103319.pdf/files/DM00103319.pdf/jcr:content/translations/en.DM00103319.pdf)
 * [Sense Hat Docs](https://www.raspberrypi.org/documentation/hardware/sense-hat/): Basic Sense Hat Docs
+* [yargs](https://github.com/yargs/yargs)
