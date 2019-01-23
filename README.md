@@ -5,7 +5,7 @@ A Node.js daemon for publishing the output of a
 [Sense Hat](https://www.raspberrypi.org/products/sense-hat/) 
 [Inertial Measurement Unit (IMU)](https://en.wikipedia.org/wiki/Inertial_measurement_unit)
 to a [RabbitMQ](https://www.rabbitmq.com/)
-[AMQP](https://en.wikipedia.org/wiki/Advanced_Message_Queuing_Protocol) Server.
+[AMQP](https://en.wikipedia.org/wiki/Advanced_Message_Queuing_Protocol) Server securely over HTTPS.
 
 ## Example Published [JSON](http://json.org) Message
 
